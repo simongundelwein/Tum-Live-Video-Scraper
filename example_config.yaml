@@ -1,0 +1,7 @@
+password: pass
+username: user
+path: path/
+courses: {
+  EIDI: /course/2022/W/eidi,
+  ERA: /course/2022/W/WiSe22ERA
+}
