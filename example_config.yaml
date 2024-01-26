@@ -1,7 +1,20 @@
 password: pass
 username: user
-path: path/
+path: lectures/
 courses: {
   EIDI: /course/2022/W/eidi,
   ERA: /course/2022/W/WiSe22ERA
+}
+
+courses: {
+  GAD: {
+    year: 2022,
+    semester: W,
+    title: GAD,
+  },
+  GBS: {
+    year: 2023,
+    semester: W,
+    title: GBS,
+  }
 }
