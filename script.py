@@ -53,7 +53,7 @@ def get_lectures_per_course(course_url: str) -> List[str]:
     sleep(1)
     lecture_elements = WEB.find_elements(By.CLASS_NAME, "tum-live-stream")
     return [
-        lecture.find_element(By.CLASS_NAME, "title").get_attribute("href")
+        lecture.find_element(By.TAG_NAME, "a").get_attribute("href")
         for lecture in lecture_elements
     ]
 
