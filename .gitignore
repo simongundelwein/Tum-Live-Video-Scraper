@@ -1,5 +1,5 @@
-tmp/
-venv/
-lock.json
 __pycache__
 .vscode/
+.env
+*.mp4
+.DS_Store

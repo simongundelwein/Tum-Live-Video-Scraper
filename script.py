@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 from typing import List, Optional, Tuple
 import os
@@ -40,6 +41,11 @@ def get_title_and_m3u8(lecture_url: str) -> Tuple[str, str]:
     WEB.get(lecture_url)
     sleep(1)
     title = WEB.find_element(By.TAG_NAME, "h1").text.strip()
+    # if title in form "Lecture: December 05. 2024"
+    try:
+        title = datetime.strptime(title, "Lecture: %B %d. %Y").strftime("%Y-%m-%d")
+    except ValueError:
+        pass
     source = WEB.page_source
     middle_index = source.find("playlist.m3u8")
     start_index = source.rfind('"', 0, middle_index) + 1
@@ -48,10 +54,22 @@ def get_title_and_m3u8(lecture_url: str) -> Tuple[str, str]:
     return title, m3u8_url
 
 
-def get_lectures_per_course(course_url: str) -> List[str]:
+def get_lectures_per_course(
+    course_url: str, start_date: Optional[datetime] = None
+) -> List[str]:
     WEB.get(course_url)
     sleep(1)
     lecture_elements = WEB.find_elements(By.CLASS_NAME, "tum-live-stream")
+    if start_date is not None:
+        lecture_elements = [
+            lecture
+            for lecture in lecture_elements
+            if datetime.strptime(
+                lecture.find_element(By.CLASS_NAME, "date").text.split(", ")[1],
+                "%m/%d/%Y",
+            )
+            >= start_date
+        ]
     return [
         lecture.find_element(By.TAG_NAME, "a").get_attribute("href")
         for lecture in lecture_elements
@@ -86,7 +104,17 @@ if __name__ == "__main__":
         help="The path where the lectures should be saved",
         default=os.getcwd(),
     )
+    parser.add_argument(
+        "--start-date",
+        type=str,
+        help="The start date of the lectures you want to download (format: YYYY-MM-DD)",
+        default="",
+    )
     args = parser.parse_args()
-    lectures = get_lectures_per_course(args.course)
+    if args.start_date:
+        start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
+        lectures = get_lectures_per_course(args.course, start_date=start_date)
+    else:
+        lectures = get_lectures_per_course(args.course)
     for lecture in lectures:
         download_lecture(lecture, args.path)
