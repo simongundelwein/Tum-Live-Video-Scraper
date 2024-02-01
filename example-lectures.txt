@@ -1,0 +1,5 @@
+https://live.rbg.tum.de/?year=2023&term=W&slug=anainfo&view=3 Analysis
+https://live.rbg.tum.de/?year=2023&term=W&slug=GBS&view=3 GBS
+https://live.rbg.tum.de/?year=2023&term=W&slug=GDB&view=3 GDB
+https://live.rbg.tum.de/?year=2023&term=W&slug=ItSec&view=3 ITSec
+2024-02-01

@@ -57,6 +57,11 @@ def get_title_and_m3u8(lecture_url: str) -> Tuple[str, str]:
 def get_lectures_per_course(
     course_url: str, start_date: Optional[datetime] = None
 ) -> List[str]:
+    print(
+        f"Getting lectures from {course_url}"
+        if start_date is None
+        else f"Getting lectures from {course_url} since {start_date}"
+    )
     WEB.get(course_url)
     sleep(1)
     lecture_elements = WEB.find_elements(By.CLASS_NAME, "tum-live-stream")
@@ -86,9 +91,11 @@ def download_lecture(lecture_url: str, path: Optional[str] = None):
         if not os.path.exists(path):
             os.makedirs(path)
     new_file_path = os.path.join(path, sanitized_title + ".mp4")
+    print(f"Downloading {new_file_path}", end="", flush=True)
     os.system(
         f'ffmpeg -i {m3u8} -c copy -bsf:a aac_adtstoasc -loglevel error "{new_file_path}"'
     )
+    print("✅")
 
 
 if __name__ == "__main__":
@@ -105,16 +112,44 @@ if __name__ == "__main__":
         default=os.getcwd(),
     )
     parser.add_argument(
-        "--start-date",
+        "--date",
         type=str,
         help="The start date of the lectures you want to download (format: YYYY-MM-DD)",
         default="",
     )
     args = parser.parse_args()
-    if args.start_date:
-        start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
-        lectures = get_lectures_per_course(args.course, start_date=start_date)
+
+    file_used = False
+    courses = []
+    if os.path.isfile(args.course):
+        file_used = True
+        with open(args.course) as f:
+            for line in f:
+                content = line.split(" ")
+                if len(content) == 2:
+                    courses.append((content[0], content[1].strip(), None))
+                elif len(content) == 1:
+                    date = datetime.strptime(content[0].strip(), "%Y-%m-%d")
+                    courses = [
+                        (course, title, current_date or date)
+                        for course, title, current_date in courses
+                    ]
+                else:
+                    raise argparse.ArgumentTypeError(
+                        "File must contain course url and course title separated by a space or a date in the format YYYY-MM-DD"
+                    )
     else:
-        lectures = get_lectures_per_course(args.course)
-    for lecture in lectures:
-        download_lecture(lecture, args.path)
+        courses.append((args.course, args.path, None))
+
+    if args.date != "":
+        date = datetime.strptime(args.date, "%Y-%m-%d")
+        courses = [(course, title, date) for course, title, _ in courses]
+
+    for course, title, start_date in courses:
+        lectures = get_lectures_per_course(course, start_date=start_date)
+        print(f"### Downloading {title} ###")
+
+        for lecture in lectures:
+            download_lecture(
+                lecture, args.path if not file_used else os.path.join(args.path, title)
+            )
